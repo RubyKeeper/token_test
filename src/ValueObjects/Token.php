@@ -1,12 +1,11 @@
 <?php
 
-namespace App\classes;
+namespace App\ValueObjects;
 
-class Token
+final readonly class Token
 {
     private string $token;
-    private \DateTimeImmutable $create_date;
-
+    private \DateTimeImmutable $expires_date; // срок жизни токена
 
     public function __construct()
     {
@@ -19,17 +18,19 @@ class Token
         }
 
         $this->token = $token;
-        $this->create_date = new \DateTimeImmutable('+ 2 hour');
+        $this->expires_date = new \DateTimeImmutable('+ 2 hour');
     }
 
     public function equals(string $token): bool
     {
+        $this->assertExpireTime();
+
         return $this->token === $token;
     }
 
     public function getToken(): string
     {
-        $this->validateTimeOut();
+        $this->assertExpireTime();
 
         return $this->token;
     }
@@ -37,9 +38,10 @@ class Token
     /**
      * Проверка на истечение срока жизни токена
      */
-    private function validateTimeOut(): void
+    private function assertExpireTime(\DateTimeImmutable $date = null): void
     {
-        if ($this->create_date->getTimestamp() < (new \DateTimeImmutable())->getTimestamp()) {
+        $now_date = $date ?? new \DateTimeImmutable();
+        if ($this->expires_date->getTimestamp() < ($now_date)->getTimestamp()) {
             throw new \InvalidArgumentException('Срок жизни токена истек');
         }
     }
