@@ -2,11 +2,16 @@
 
 namespace App\ValueObjects;
 
+use Random\RandomException;
+
 final readonly class Token
 {
     private string $token;
     private \DateTimeImmutable $expires_date; // срок жизни токена
 
+    /**
+     * @throws RandomException
+     */
     public function __construct()
     {
         $bytes = random_bytes(50);
@@ -24,15 +29,7 @@ final readonly class Token
     public function equals(string $token): bool
     {
         $this->assertExpireTime();
-
         return $this->token === $token;
-    }
-
-    public function getToken(): string
-    {
-        $this->assertExpireTime();
-
-        return $this->token;
     }
 
     /**
@@ -44,6 +41,12 @@ final readonly class Token
         if ($this->expires_date->getTimestamp() < ($now_date)->getTimestamp()) {
             throw new \InvalidArgumentException('Срок жизни токена истек');
         }
+    }
+
+    public function getToken(): string
+    {
+        $this->assertExpireTime();
+        return $this->token;
     }
 }
 
